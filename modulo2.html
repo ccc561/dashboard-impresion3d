@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo 2 - Monitor de Emergencias</title>
+    <title>Módulo 2 - Monitor de Emergencias Multi-Zona</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
@@ -12,61 +12,48 @@
         <a href="index.html" class="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
             ← Volver al Dashboard
         </a>
-        <span class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-400">Módulo 2</span>
+        <span class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-400">Módulo 2 Activo</span>
     </nav>
 
-    <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-12">
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-12">
         <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">🚨 Monitor de Emergencias</h1>
-                    <p class="text-sm text-slate-400">Cruce de datos sísmicos mundiales en tiempo real y alertas meteorológicas simultáneas.</p>
+                    <h1 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">🚨 Monitor de Emergencias Globales</h1>
+                    <p class="text-sm text-slate-400">Monitoreo simultáneo de múltiples focos sísmicos y cruce climático automático.</p>
                 </div>
                 <div class="flex gap-2">
-                    <button id="btn-real" onclick="cargarDatos(false)" class="bg-slate-700 hover:bg-slate-600 text-xs font-semibold px-3 py-2 rounded-lg transition-colors border border-slate-600 text-slate-200">
-                        Datos Reales
+                    <button onclick="cargarDatos(false)" class="bg-slate-700 hover:bg-slate-600 text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors border border-slate-600">
+                        🔄 Actualizar Datos Reales
                     </button>
-                    <button id="btn-simular" onclick="cargarDatos(true)" class="bg-amber-600/20 hover:bg-amber-600/40 text-xs font-semibold px-3 py-2 rounded-lg transition-colors border border-amber-500/30 text-amber-400">
+                    <button onclick="cargarDatos(true)" class="bg-rose-600/20 hover:bg-rose-600/40 text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors border border-rose-500/30 text-rose-400">
                         Simular Alerta Máxima ⚠️
                     </button>
                 </div>
             </div>
 
-            <div id="alerta-critica" class="hidden mb-8 p-6 bg-rose-600 rounded-xl border-2 border-rose-400 text-white animate-pulse shadow-xl shadow-rose-600/30">
+            <div id="alerta-critica" class="hidden mb-8 p-6 bg-rose-600 rounded-xl border-2 border-rose-400 text-white animate-pulse shadow-xl">
                 <div class="flex items-center gap-4">
                     <span class="text-4xl">⚠️</span>
                     <div>
-                        <h2 class="text-xl font-black tracking-wide">PRIORIDAD DE AYUDA HUMANA</h2>
-                        <p class="text-sm opacity-90 mt-1">Se ha detectado una zona sísmica de alta magnitud afectada simultáneamente por condiciones climáticas adversas severas. Desplegar equipos de rescate de inmediato.</p>
+                        <h2 class="text-xl font-black tracking-wide">PRIORIDAD DE AYUDA HUMANA DETECTADA</h2>
+                        <p class="text-sm opacity-90 mt-1">Al menos una de las zonas analizadas presenta un sismo severo (>5.0 Mw) bajo condiciones meteorológicas adversas. Coordinar soporte logístico inmediato.</p>
                     </div>
                 </div>
             </div>
 
             <div id="error-container" class="hidden mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-sm">
-                <span>⚠️</span> El servicio de sismología o clima no respondió correctamente. Mostrando estado de contingencia.
+                <span>⚠️</span> Error al conectar con los servidores globales. Desplegando registros de respaldo.
             </div>
 
             <div class="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
-                <div class="px-6 py-4 bg-slate-950/40 border-b border-slate-700 flex justify-between items-center">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Último Reporte de Actividad Cruzada</h3>
-                    <span id="badge-estado" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ESTABLE</span>
+                <div class="px-6 py-4 bg-slate-950/40 border-b border-slate-700">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Últimos 5 Eventos de Alta Intensidad Monitoreados</h3>
                 </div>
                 
-                <div class="p-6 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
-                            <span class="text-xs text-slate-400 font-medium block mb-1">Magnitud Registrada</span>
-                            <p id="sis-magnitud" class="text-3xl font-black text-white">--</p>
-                        </div>
-                        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
-                            <span class="text-xs text-slate-400 font-medium block mb-1">Epicentro</span>
-                            <p id="sis-lugar" class="text-base font-bold text-white truncate">Cargando...</p>
-                        </div>
-                        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
-                            <span class="text-xs text-slate-400 font-medium block mb-1">Clima en Epicentro</span>
-                            <p id="sis-clima" class="text-base font-bold text-cyan-400">--</p>
-                        </div>
-                    </div>
+                <div id="lista-sismos" class="divide-y divide-slate-800">
+                    <p class="p-6 text-sm text-slate-400 text-center">Cargando estaciones sismológicas mundiales...</p>
                 </div>
             </div>
         </div>
@@ -74,53 +61,77 @@
 
     <script>
         async function cargarDatos(simular = false) {
-            const alerta = document.getElementById('alerta-critica');
+            const alertaGlobal = document.getElementById('alerta-critica');
             const errorContainer = document.getElementById('error-container');
-            const mag = document.getElementById('sis-magnitud');
-            const lugar = document.getElementById('sis-lugar');
-            const clima = document.getElementById('sis-clima');
-            const badge = document.getElementById('badge-estado');
+            const listaSismos = document.getElementById('lista-sismos');
 
-            alerta.classList.add('hidden');
+            alertaGlobal.classList.add('hidden');
             errorContainer.classList.add('hidden');
-            lugar.innerText = "Consultando central sísmica...";
+            listaSismos.innerHTML = '<p class="p-6 text-sm text-slate-400 text-center animate-pulse">Solicitando datos seguros al servidor...</p>';
 
             try {
-                // Consumimos nuestro backend seguro pasándole si queremos simular o no
                 const response = await fetch(`/api/modulo2?simular=${simular}`);
-                const data = await response.json();
+                const data = await response.json(); // Ahora data es un Array de 5 sismos
 
                 if (!response.ok) throw new Error();
 
-                // Pintar datos procesados por el backend
-                mag.innerText = `${data.magnitud} Mw`;
-                lugar.innerText = data.lugar;
-                clima.innerText = data.climaEstado;
+                listaSismos.innerHTML = ""; // Limpiar mensaje de carga
+                let activarAlertaGlobal = false;
 
-                // Modificar colores según magnitud
-                if (data.magnitud > 5) {
-                    mag.className = "text-3xl font-black text-rose-500";
-                } else {
-                    mag.className = "text-3xl font-black text-emerald-400";
-                }
+                // Iterar sobre cada sismo recibido del backend
+                data.forEach(sismo => {
+                    if (sismo.alertaRoja) activarAlertaGlobal = true;
 
-                // DETONADOR OBLIGATORIO DE ALERTA VISUAL ROJA
-                if (data.alertaRoja) {
-                    alerta.classList.remove('hidden');
-                    badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20";
-                    badge.innerText = "CRÍTICO";
-                } else {
-                    badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-                    badge.innerText = "SITUACIÓN NORMAL";
+                    // Determinar color de la magnitud
+                    const colorMag = sismo.magnitud > 5.0 ? 'text-rose-400' : 'text-emerald-400';
+                    
+                    // Crear el bloque HTML para este sismo
+                    const itemHtml = `
+                        <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-850 transition-colors">
+                            <div class="flex items-start gap-4">
+                                <div class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-center min-w-[70px]">
+                                    <span class="text-2xl font-black ${colorMag}">${sismo.magnitud}</span>
+                                    <span class="block text-[9px] text-slate-500 font-bold uppercase tracking-tight">Mw</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-bold text-base">${sismo.lugar}</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
+                                        <span>🌍 Clima en Zona:</span> 
+                                        <span class="text-cyan-400 font-medium">${sismo.climaEstado}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-3 justify-end">
+                                ${sismo.alertaRoja ? `
+                                    <span class="text-[10px] font-extrabold bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2.5 py-1 rounded-md tracking-wider">
+                                        ⚠️ EMERGENZIA
+                                    </span>
+                                ` : `
+                                    <span class="text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700 px-2.5 py-1 rounded-md">
+                                        ESTABLE
+                                    </span>
+                                `}
+                                <a href="${sismo.urlOficial}" target="_blank" class="bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white text-xs font-medium px-3 py-2 rounded-lg border border-indigo-500/20 hover:border-indigo-500 transition-all flex items-center gap-1">
+                                    Comprobar USGS ↗
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    listaSismos.innerHTML += itemHtml;
+                });
+
+                // Si al menos uno cumple las condiciones, encendemos la alarma roja superior
+                if (activarAlertaGlobal) {
+                    alertaGlobal.classList.remove('hidden');
                 }
 
             } catch (err) {
                 errorContainer.classList.remove('hidden');
-                lugar.innerText = "Error de conexión";
+                listaSismos.innerHTML = '<p class="p-6 text-xs text-rose-400 text-center">Falla de contingencia: No se pudieron sincronizar los datos en vivo.</p>';
             }
         }
 
-        // Cargar datos reales automáticamente al entrar
         document.addEventListener('DOMContentLoaded', () => cargarDatos(false));
     </script>
 </body>
