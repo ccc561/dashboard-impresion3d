@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 4 - Gestión de Órdenes CRUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+            ← Volver al Dashboard
+        </a>
+        <span id="db-indicator" class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-amber-400 font-medium">Cargando origen...</span>
+    </nav>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-2xl h-fit">
+            <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">📥 Nueva Orden 3D</h2>
+            <p class="text-xs text-slate-400 mb-5">Ingresa los datos del cliente para la cola de impresión.</p>
+            
+            <form id="form-orden" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Nombre del Cliente</label>
+                    <input type="text" id="cliente" required placeholder="Ej: Carlos Pérez" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Nombre de la Pieza (.STL)</label>
+                    <input type="text" id="pieza" required placeholder="Ej: Casco IronMan V2" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Material Requerido</label>
+                    <select id="material" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                        <option value="PLA Pro">PLA Pro (Estándar)</option>
+                        <option value="PETG">PETG (Resistente)</option>
+                        <option value="ABS">ABS (Térmico)</option>
+                        <option value="Resina UV">Resina UV (Alta Definición)</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm transition-colors mt-2 shadow-lg shadow-indigo-600/10">
+                    Añadir a la Cola de Impresión
+                </button>
+            </form>
+        </div>
+
+        <div class="lg:col-span-2 bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-2xl">
+            <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">📋 Cola de Manufactura Activa</h2>
+            <p class="text-xs text-slate-400 mb-5">Administración en tiempo real de las solicitudes registradas.</p>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700/50">
+                        <tr>
+                            <th class="px-4 py-3">Cliente / Pieza</th>
+                            <th class="px-4 py-3">Material</th>
+                            <th class="px-4 py-3">Estado</th>
+                            <th class="px-4 py-3 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-ordenes" class="divide-y divide-slate-700/40">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = '/api/modulo4';
+
+        // Cargar Órdenes (READ)
+        async function obtenerOrdenes() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                // Mostrar si estamos usando Supabase real o simulación
+                const indicator = document.getElementById('db-indicator');
+                if (data.origen === "Supabase Cloud") {
+                    indicator.className = "text-xs bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 text-emerald-400 font-medium";
+                    indicator.innerText = "🌐 Conectado a Supabase Real";
+                } else {
+                    indicator.className = "text-xs bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 text-amber-400 font-medium";
+                    indicator.innerText = "⚡ Modo Simulación Local Activo";
+                }
+
+                const tabla = document.getElementById('tabla-ordenes');
+                tabla.innerHTML = "";
+
+                if (data.ordenes.length === 0) {
+                    tabla.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-slate-500 text-xs">No hay órdenes en la cola de impresión.</td></tr>`;
+                    return;
+                }
+
+                data.ordenes.forEach(orden => {
+                    let colorBadge = "bg-slate-700 text-slate-300";
+                    if (orden.estado === "Imprimiendo") colorBadge = "bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                    if (orden.estado === "Terminado") colorBadge = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+
+                    tabla.innerHTML += `
+                        <tr class="hover:bg-slate-750/40 transition-colors">
+                            <td class="px-4 py-3.5">
+                                <span class="block font-semibold text-white text-sm">${orden.cliente}</span>
+                                <span class="block text-xs text-slate-400 font-mono">${orden.pieza}</span>
+                            </td>
+                            <td class="px-4 py-3.5 text-xs font-medium text-slate-400">${orden.material}</td>
+                            <td class="px-4 py-3.5">
+                                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${colorBadge}">
+                                    ${orden.estado}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3.5 text-right space-x-1 whitespace-nowrap">
+                                <button onclick="actualizarEstado(${orden.id}, '${orden.estado}')" class="text-xs bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white px-2 py-1 rounded border border-indigo-500/20 transition-all">
+                                    🔀 Avanzar
+                                </button>
+                                <button onclick="eliminarOrden(${orden.id})" class="text-xs bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white px-2 py-1 rounded border border-rose-500/20 transition-all">
+                                    🗑️
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error("Error al leer datos:", error);
+            }
+        }
+
+        // Crear Orden (CREATE)
+        document.getElementById('form-orden').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cliente = document.getElementById('cliente').value;
+            const pieza = document.getElementById('pieza').value;
+            const material = document.getElementById('material').value;
+
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cliente, pieza, material })
+            });
+
+            document.getElementById('form-orden').reset();
+            obtenerOrdenes();
+        });
+
+        // Actualizar Ciclo de Trabajo (UPDATE)
+        async function actualizarEstado(id, estadoActual) {
+            let nuevoEstado = "Imprimiendo";
+            if (estadoActual === "Imprimiendo") nuevoEstado = "Terminado";
+            if (estadoActual === "Terminado") nuevoEstado = "En Cola";
+
+            await fetch(API_URL, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, estado: nuevoEstado })
+            });
+            obtenerOrdenes();
+        }
+
+        // Eliminar del Registro (DELETE)
+        async function eliminarOrden(id) {
+            await fetch(API_URL, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            obtenerOrdenes();
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', obtenerOrdenes);
+    </script>
+</body>
+</html>
