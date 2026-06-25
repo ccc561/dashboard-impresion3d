@@ -1,40 +1,37 @@
+// Data simulada histórica por si Supabase está apagado
+const historialSimulado = [
+    { id: 901, cliente: "Ignacio Torres", pieza: "Engranaje_Reductor.stl", material: "ABS", estado: "Terminado" },
+    { id: 902, cliente: "Loreto Cárcamo", pieza: "Prototipo_Carcasa_Drone.stl", material: "PETG", estado: "Terminado" },
+    { id: 903, cliente: "Clínica Dental San Lucas", pieza: "Guia_Quirurgica_V4.stl", material: "Resina UV", estado: "Terminado" },
+    { id: 904, cliente: "Matías Fuentealba", pieza: "Soporte_Audifonos.stl", material: "PLA Pro", estado: "Terminado" }
+];
+
 export default async function handler(request, response) {
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+    const usarSupabaseReal = SUPABASE_URL && SUPABASE_KEY;
+
+    const headersSupabase = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json"
+    };
+
     try {
-        // REQUISITO CUMPLIDO: Llamada real a una API Externa en la web
-        const apiUrl = "https://jsonplaceholder.typicode.com/photos?_limit=6";
-        const peticionExterna = await fetch(apiUrl);
-        const dataOriginal = await peticionExterna.json();
+        if (usarSupabaseReal) {
+            // Hacemos un filtro estricto por URL: solo traer registros donde estado sea 'Terminado' o 'Entregado'
+            // En la API REST de Supabase, esto se logra usando el operador 'eq' o 'in'
+            const urlFiltro = `${SUPABASE_URL}/rest/v1/ordenes?estado=eq.Terminado&order=id.desc`;
+            
+            const res = await fetch(urlFiltro, { headers: headersSupabase });
+            const ordenes = await res.json();
 
-        // Nombres temáticos de Impresión 3D para reemplazar los textos genéricos de la API
-        const catalogo3D = [
-            { nombre: "Engranaje Helicoidal V2", categoria: "Mecánica", material: "PETG", tiempo: "4h 15m", desc: "Pieza de repuesto para extrusoras industriales con alta resistencia a la torsión." },
-            { nombre: "Figura Coleccionable 'Mago'", categoria: "Arte", material: "Resina UV", tiempo: "8h 30m", desc: "Miniatura de 32mm para juegos de mesa con detalles de alta resolución." },
-            { nombre: "Soporte Articulado para Móvil", categoria: "Hogar", material: "PLA Pro", tiempo: "2h 45m", desc: "Soporte de escritorio ajustable con topes antideslizantes integrados." },
-            { nombre: "Maceta Geométrica Minimalista", categoria: "Hogar", material: "PLA Pro", tiempo: "6h 00m", desc: "Diseño poligonal hermético, ideal para suculentas y plantas de interior." },
-            { nombre: "Caja de Herramientas Modular", categoria: "Utilidad", material: "ABS", tiempo: "12h 20m", desc: "Organizador encastrable con bisagras reforzadas para uso rudo." },
-            { nombre: "Prototipo Carcasa Drone", categoria: "Ingeniería", material: "Fibra de Carbono", tiempo: "5h 10m", desc: "Chasis ligero y aerodinámico diseñado para cuadricópteros de carreras." }
-        ];
-
-        // Mapeamos (transformamos) los datos de la API externa combinándolos con nuestros datos
-        const modelosTransformados = dataOriginal.map((item, index) => {
-            return {
-                id: item.id,
-                // Usamos la imagen de la API externa
-                imagen: item.url, 
-                // Inyectamos nuestros datos 3D
-                nombre: catalogo3D[index].nombre,
-                categoria: catalogo3D[index].categoria,
-                material: catalogo3D[index].material,
-                tiempo: catalogo3D[index].tiempo,
-                descripcion: catalogo3D[index].desc
-            };
-        });
-
-        // Devolvemos el array JSON limpio al Frontend
-        return response.status(200).json(modelosTransformados);
-
+            return response.status(200).json({ origen: "Supabase Cloud", ordenes });
+        } else {
+            return response.status(200).json({ origen: "Simulación Local", ordenes: historialSimulado });
+        }
     } catch (error) {
-        console.error("Error al obtener catálogo:", error);
-        return response.status(500).json({ error: "No se pudo conectar con la API externa del catálogo." });
+        console.error("Error en módulo historial:", error);
+        return response.status(500).json({ error: "Falla al leer el archivo histórico." });
     }
 }
