@@ -6,42 +6,48 @@ export default async function handler(request, response) {
     }
 
     try {
-        // 1. Llamada a la API Financiera (para el costo del despacho)
+        // 1. API Financiera (para la conversión a dólares)
         const urlFinanciera = `https://open.er-api.com/v6/latest/CLP`;
-        const resFinanciera = await fetch(urlFinanciera).then(res => res.json());
         
+        // Extraemos el año de la fecha que ingresó el usuario para buscar los feriados correctos
+        const dateObj = new Date(`${fecha}T12:00:00Z`);
+        const year = dateObj.getUTCFullYear();
+        
+        // 2. API REAL DE FERIADOS (Filtramos por el país: Chile 'CL')
+        const urlFeriados = `https://date.nager.at/api/v3/PublicHolidays/${year}/CL`;
+
+        // Ejecutamos ambas peticiones al mismo tiempo para no hacer esperar al usuario
+        const [resFinanciera, feriadosChile] = await Promise.all([
+            fetch(urlFinanciera).then(res => res.json()),
+            fetch(urlFeriados).then(res => res.json()).catch(() => []) // Si la API de feriados falla, usamos array vacío
+        ]);
+        
+        // --- Procesar Costo USD ---
         const tasaUsd = resFinanciera.rates ? resFinanciera.rates.USD : 0.0011;
         const costoUsd = (parseFloat(costo) * tasaUsd).toFixed(2);
 
-        // 2. Lógica de Calendario (Fines de semana y feriados)
-        // Convertimos el string de fecha a objeto Date asegurando la zona horaria UTC para no desfasar días
-        const dateObj = new Date(`${fecha}T12:00:00Z`); 
+        // --- Procesar Fines de Semana ---
         const dayOfWeek = dateObj.getUTCDay(); // 0 es Domingo, 6 es Sábado
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-        // Simulador de Feriados Internacionales (Días bloqueados logísticamente)
-        const month = dateObj.getUTCMonth() + 1;
-        const day = dateObj.getUTCDate();
-        
-        // Ejemplos de feriados fijos: 1 Enero (Año Nuevo), 1 Mayo (Día Trabajo), 25 Diciembre (Navidad)
-        const isHoliday = 
-            (month === 1 && day === 1) || 
-            (month === 5 && day === 1) || 
-            (month === 12 && day === 25);
+        // --- Procesar Feriados Reales ---
+        // La fecha del input ya viene como "YYYY-MM-DD", buscamos si coincide con algún feriado de la API
+        const feriadoEncontrado = feriadosChile.find(feriado => feriado.date === fecha);
 
-        // 3. Procesar las reglas de negocio
+        // --- Reglas de negocio para el mensaje final ---
         let mensajeLogistico = "Día hábil válido. Despacho programado a tiempo.";
         let retraso = false;
 
-        if (isWeekend) {
-            mensajeLogistico = "Retraso: Fin de semana detectado. El envío de la pieza 3D se pospondrá al próximo lunes.";
+        // Le damos prioridad al aviso de feriado para que el usuario sepa EXACTAMENTE qué se celebra
+        if (feriadoEncontrado) {
+            mensajeLogistico = `Retraso: Feriado detectado en Chile (${feriadoEncontrado.localName}). Envío pospuesto al siguiente día hábil.`;
             retraso = true;
-        } else if (isHoliday) {
-            mensajeLogistico = "Retraso: Día feriado detectado. Los transportistas no operan. Envío pospuesto al siguiente día hábil.";
+        } else if (isWeekend) {
+            mensajeLogistico = "Retraso: Fin de semana detectado. El envío de la pieza 3D se pospondrá al próximo lunes.";
             retraso = true;
         }
 
-        // Devolver todo el consolidado
+        // Enviamos la respuesta limpia al Frontend
         return response.status(200).json({
             costoUsd,
             mensajeLogistico,
