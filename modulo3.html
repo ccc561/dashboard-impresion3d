@@ -1,61 +1,97 @@
-export default async function handler(request, response) {
-    const { fecha, costo } = request.query;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 3 - Despacho Logístico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
-    if (!fecha || !costo) {
-        return response.status(400).json({ error: "Faltan parámetros de fecha o costo." });
-    }
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+            ← Volver al Dashboard
+        </a>
+        <span class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-400">Módulo 3</span>
+    </nav>
 
-    try {
-        // 1. API Financiera (para la conversión a dólares)
-        const urlFinanciera = `https://open.er-api.com/v6/latest/CLP`;
-        
-        // Extraemos el año de la fecha que ingresó el usuario para buscar los feriados correctos
-        const dateObj = new Date(`${fecha}T12:00:00Z`);
-        const year = dateObj.getUTCFullYear();
-        
-        // 2. API REAL DE FERIADOS (Filtramos por el país: Chile 'CL')
-        const urlFeriados = `https://date.nager.at/api/v3/PublicHolidays/${year}/CL`;
+    <main class="flex-grow max-w-3xl w-full mx-auto px-4 py-12">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
+            <h1 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">📦 Planificador de Despacho</h1>
+            <p class="text-sm text-slate-400 mb-6">Valida la viabilidad de la fecha de envío de las piezas 3D y calcula el costo logístico en USD.</p>
 
-        // Ejecutamos ambas peticiones al mismo tiempo para no hacer esperar al usuario
-        const [resFinanciera, feriadosChile] = await Promise.all([
-            fetch(urlFinanciera).then(res => res.json()),
-            fetch(urlFeriados).then(res => res.json()).catch(() => []) // Si la API de feriados falla, usamos array vacío
-        ]);
-        
-        // --- Procesar Costo USD ---
-        const tasaUsd = resFinanciera.rates ? resFinanciera.rates.USD : 0.0011;
-        const costoUsd = (parseFloat(costo) * tasaUsd).toFixed(2);
+            <form id="form-logistica" class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Fecha Solicitada de Envío</label>
+                        <input type="date" id="fecha-envio" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors [color-scheme:dark]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Costo de Envío Local ($)</label>
+                        <input type="number" id="costo-local" required min="1" placeholder="Ej: 5000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                </div>
+                <button type="submit" id="btn-submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition-colors shadow-lg shadow-indigo-600/20 flex justify-center items-center gap-2">
+                    Evaluar Viabilidad Logística
+                </button>
+            </form>
 
-        // --- Procesar Fines de Semana ---
-        const dayOfWeek = dateObj.getUTCDay(); // 0 es Domingo, 6 es Sábado
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            <div id="resultado-container" class="hidden mt-8 border-t border-slate-700/60 pt-6 space-y-4">
+                <div class="bg-slate-900/80 border border-slate-700/50 rounded-xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Estado Operativo</span>
+                        <p id="res-estado" class="text-lg font-bold text-white">--</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Costo Convertido (USD)</span>
+                        <p id="res-costo" class="text-2xl font-black text-emerald-400">$--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-        // --- Procesar Feriados Reales ---
-        // La fecha del input ya viene como "YYYY-MM-DD", buscamos si coincide con algún feriado de la API
-        const feriadoEncontrado = feriadosChile.find(feriado => feriado.date === fecha);
+    <script>
+        document.getElementById('form-logistica').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fecha = document.getElementById('fecha-envio').value;
+            const costo = document.getElementById('costo-local').value;
+            const btn = document.getElementById('btn-submit');
+            const resultadoContainer = document.getElementById('resultado-container');
+            const resEstado = document.getElementById('res-estado');
 
-        // --- Reglas de negocio para el mensaje final ---
-        let mensajeLogistico = "Día hábil válido. Despacho programado a tiempo.";
-        let retraso = false;
+            btn.innerText = "Procesando en Backend...";
+            btn.disabled = true;
+            resultadoContainer.classList.add('hidden');
 
-        // Le damos prioridad al aviso de feriado para que el usuario sepa EXACTAMENTE qué se celebra
-        if (feriadoEncontrado) {
-            mensajeLogistico = `Retraso: Feriado detectado en Chile (${feriadoEncontrado.localName}). Envío pospuesto al siguiente día hábil.`;
-            retraso = true;
-        } else if (isWeekend) {
-            mensajeLogistico = "Retraso: Fin de semana detectado. El envío de la pieza 3D se pospondrá al próximo lunes.";
-            retraso = true;
-        }
+            try {
+                const response = await fetch(`/api/modulo3?fecha=${fecha}&costo=${costo}`);
+                const data = await response.json();
 
-        // Enviamos la respuesta limpia al Frontend
-        return response.status(200).json({
-            costoUsd,
-            mensajeLogistico,
-            retraso
+                if (!response.ok) throw new Error();
+
+                // Pintar resultados
+                document.getElementById('res-costo').innerText = `$${data.costoUsd} USD`;
+                resEstado.innerText = data.mensajeLogistico;
+                
+                // Cambiar color según el estado del envío devuelto por el backend
+                if (data.retraso) {
+                    resEstado.className = "text-lg font-bold text-rose-400 flex items-center gap-2";
+                    resEstado.innerHTML = `⚠️ ${data.mensajeLogistico}`;
+                } else {
+                    resEstado.className = "text-lg font-bold text-emerald-400 flex items-center gap-2";
+                    resEstado.innerHTML = `✅ ${data.mensajeLogistico}`;
+                }
+
+                resultadoContainer.classList.remove('hidden');
+            } catch (error) {
+                alert("Error al procesar la solicitud logística.");
+            } finally {
+                btn.innerText = "Evaluar Viabilidad Logística";
+                btn.disabled = false;
+            }
         });
-
-    } catch (error) {
-        console.error("Error en módulo de despacho:", error);
-        return response.status(500).json({ error: "Falla en los servicios logísticos." });
-    }
-}
+    </script>
+</body>
+</html>
