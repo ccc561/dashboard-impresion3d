@@ -1,1 +1,176 @@
-<h1>Mi Dashboard 3D</h1>).
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3DPrintOps - Dashboard de Operaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
+
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white font-bold text-xl tracking-wider">3D</div>
+            <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">PrintOps Hub</span>
+        </div>
+        <div class="text-sm bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-slate-300 font-medium">Sistema Principal Operativo</span>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Dashboard de Infraestructura</h1>
+            <p class="mt-2 text-sm text-slate-400 max-w-2xl">Panel centralizado para el monitoreo de microservicios, APIs financieras, climáticas y módulos de control del ecosistema de Impresión 3D.</p>
+        </div>
+
+        <div class="mb-10">
+            <h2 class="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">Módulos Guiados de Clase</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-2xl">💸</span>
+                            <span id="status-m1" class="text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> VERIFICANDO
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Viáticos Internacionales</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2">Conversión presupuestaria paralela y análisis climatológico de vestimenta para personal en el extranjero.</p>
+                    </div>
+                    <button class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">Acceder Módulo</button>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-2xl">🚨</span>
+                            <span id="status-m2" class="text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> VERIFICANDO
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Monitor de Emergencias</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2">Cruce condicional en tiempo real de actividad sísmica severa y condiciones climáticas adversas.</p>
+                    </div>
+                    <button class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">Acceder Módulo</button>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-2xl">📦</span>
+                            <span id="status-m3" class="text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> VERIFICANDO
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Despacho Logístico</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2">Planificador de envíos excluyendo días feriados y cálculo de costos según cotización del dólar.</p>
+                    </div>
+                    <button class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">Acceder Módulo</button>
+                </div>
+
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">Módulos Libres - Infraestructura Impresión 3D</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-2xl">🗄️</span>
+                            <span id="status-m4" class="text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> VERIFICANDO
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Gestión de Órdenes CRUD</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2">Conexión directa a Supabase para listar, añadir y actualizar peticiones de piezas 3D recibidas.</p>
+                    </div>
+                    <button class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">Acceder Módulo</button>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-2xl">🤖</span>
+                            <span id="status-m5" class="text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> VERIFICANDO
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Monitor Webhook Make</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2">Herramienta de diagnóstico para verificar la disponibilidad del bot de automatización de correos.</p>
+                    </div>
+                    <button class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">Acceder Módulo</button>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-2xl">⚖️</span>
+                            <span id="status-m6" class="text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> VERIFICANDO
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Cotizador Inteligente</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2">Algoritmo dinámico de costo basado en gramos de filamento, tipo de material y validaciones UX.</p>
+                    </div>
+                    <button class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">Acceder Módulo</button>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-2xl">📋</span>
+                            <span id="status-m7" class="text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> VERIFICANDO
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Historial de Impresiones</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2">Módulo de reportería con tabla de logs de impresiones exitosas y fallas en manufactura.</p>
+                    </div>
+                    <button class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">Acceder Módulo</button>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-2xl">🔒</span>
+                            <span id="status-m8" class="text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> VERIFICANDO
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Autenticación Supabase</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2">Portal simulado de login para operadores técnicos con validación en tiempo real.</p>
+                    </div>
+                    <button class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">Acceder Módulo</button>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between hover:border-slate-600 transition-all shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-2xl">🔑</span>
+                            <span id="status-m9" class="text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> VERIFICANDO
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Validador de Tokens JWT</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2">Escáner de seguridad para verificar la integridad de los tokens de rastreo de pedidos generados.</p>
+                    </div>
+                    <button class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">Acceder Módulo</button>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-slate-950 border-t border-slate-800 text-center py-4 text-xs text-slate-500">
+        &copy; 2026 3DPrintOps Infrastructure. Sistema de Monitoreo "Vibe Coding".
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
