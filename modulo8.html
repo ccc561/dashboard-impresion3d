@@ -1,11 +1,144 @@
-...
-<h1 class="...">🛡️ Escudo Anti-Spam & Validación</h1>
-<p>Verificación de correos en tiempo real mediante heurística y bases de datos globales de dominios desechables.</p>
-...
-<form> input, button </form>
-...
-Results panel with 4 metrics:
-- Estructura Sintáctica (✅ Válida)
-- Cuenta de Rol (e.g., admin@) (⚠️ Detectada / ✅ Normal)
-- Dominio Desechable (❌ Desechable / ✅ Limpio)
-- Nivel de Riesgo (Bajo / Alto)
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 8 - Escudo Anti-Spam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+            ← Volver al Dashboard
+        </a>
+        <span class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-400 font-mono">SECURE_SCAN_V1</span>
+    </nav>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-12">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
+            <h1 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">🛡️ Escudo Anti-Spam y Validación</h1>
+            <p class="text-sm text-slate-400 mb-8">Auditoría de seguridad para filtrar correos temporales, cuentas genéricas y errores de sintaxis antes del registro.</p>
+
+            <form id="form-validador" class="flex flex-col md:flex-row gap-4 mb-10">
+                <div class="flex-grow">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Correo del Cliente a Evaluar</label>
+                    <input type="email" id="email" required placeholder="Ej: cliente@10minutemail.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" id="btn-scan" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-indigo-600/20 whitespace-nowrap">
+                        🔍 Ejecutar Auditoría
+                    </button>
+                </div>
+            </form>
+
+            <div id="resultado-container" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6 border-t border-slate-700 pt-8">
+                
+                <div class="flex justify-between items-end mb-4">
+                    <h3 class="text-lg font-bold text-white">Reporte de Salud del Correo</h3>
+                    <span id="badge-riesgo" class="text-[10px] font-extrabold uppercase px-3 py-1 rounded border">Nivel de Riesgo: --</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">1. Estructura Sintáctica</span>
+                        <p id="res-sintaxis" class="text-sm font-semibold">--</p>
+                    </div>
+
+                    <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">2. Análisis de Cuenta</span>
+                        <p id="res-rol" class="text-sm font-semibold">--</p>
+                    </div>
+
+                    <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">3. Filtro Dominio Desechable</span>
+                        <p id="res-desechable" class="text-sm font-semibold">--</p>
+                    </div>
+                </div>
+
+                <div id="panel-veredicto" class="mt-4 p-4 rounded-xl border">
+                    <span class="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">Veredicto del Sistema</span>
+                    <p id="res-mensaje" class="text-base font-medium">--</p>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('form-validador').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const btn = document.getElementById('btn-scan');
+            const resContainer = document.getElementById('resultado-container');
+            
+            // Elementos de la UI
+            const resSintaxis = document.getElementById('res-sintaxis');
+            const resRol = document.getElementById('res-rol');
+            const resDesechable = document.getElementById('res-desechable');
+            const badgeRiesgo = document.getElementById('badge-riesgo');
+            const panelVeredicto = document.getElementById('panel-veredicto');
+            const resMensaje = document.getElementById('res-mensaje');
+
+            btn.disabled = true;
+            btn.innerText = "Escaneando red global...";
+            resContainer.classList.add('hidden');
+
+            try {
+                // LLAMADA AL BACKEND DE SEGURIDAD
+                const response = await fetch(`/api/modulo8?correo=${encodeURIComponent(email)}`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error();
+
+                // 1. Pintar Sintaxis
+                if (data.sintaxis) {
+                    resSintaxis.innerHTML = `<span class="text-emerald-400">✅ Formato Válido</span>`;
+                } else {
+                    resSintaxis.innerHTML = `<span class="text-rose-400">❌ Formato Corrupto</span>`;
+                }
+
+                // 2. Pintar Rol
+                if (data.esRol) {
+                    resRol.innerHTML = `<span class="text-amber-400">⚠️ Cuenta Genérica (Rol)</span>`;
+                } else {
+                    resRol.innerHTML = `<span class="text-emerald-400">✅ Cuenta Personal</span>`;
+                }
+
+                // 3. Pintar Desechable
+                if (data.esDesechable) {
+                    resDesechable.innerHTML = `<span class="text-rose-400">🚨 Detectado en Blacklist</span>`;
+                } else {
+                    resDesechable.innerHTML = `<span class="text-emerald-400">✅ Dominio Limpio</span>`;
+                }
+
+                // Pintar Nivel de Riesgo Global
+                resMensaje.innerText = data.mensaje;
+                
+                if (data.riesgo === "Alto" || data.riesgo === "Crítico") {
+                    badgeRiesgo.className = "text-[10px] font-extrabold uppercase px-3 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                    badgeRiesgo.innerText = `Nivel de Riesgo: ${data.riesgo}`;
+                    panelVeredicto.className = "mt-4 p-4 rounded-xl border bg-rose-500/10 border-rose-500/20 text-rose-400";
+                } else if (data.riesgo === "Medio") {
+                    badgeRiesgo.className = "text-[10px] font-extrabold uppercase px-3 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                    badgeRiesgo.innerText = `Nivel de Riesgo: Medio`;
+                    panelVeredicto.className = "mt-4 p-4 rounded-xl border bg-amber-500/10 border-amber-500/20 text-amber-400";
+                } else {
+                    badgeRiesgo.className = "text-[10px] font-extrabold uppercase px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                    badgeRiesgo.innerText = `Nivel de Riesgo: Seguro`;
+                    panelVeredicto.className = "mt-4 p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/20 text-emerald-400";
+                }
+
+                resContainer.classList.remove('hidden');
+
+            } catch (error) {
+                alert("Error de conexión con el escáner de seguridad.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🔍 Ejecutar Auditoría";
+            }
+        });
+    </script>
+</body>
+</html>
