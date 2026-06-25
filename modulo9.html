@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 9 - Radar Climático de Despacho</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+            ← Volver al Dashboard
+        </a>
+        <span class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-400 font-mono">LOGISTICS_RADAR_V1</span>
+    </nav>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-12">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
+            <h1 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">🌡️ Radar Climático de Despacho</h1>
+            <p class="text-sm text-slate-400 mb-8">Análisis meteorológico en tiempo real para predecir riesgos de deformación térmica en piezas impresas durante su transporte.</p>
+
+            <form id="form-radar" class="flex flex-col md:flex-row gap-4 mb-10">
+                <div class="flex-grow">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Ciudad de Destino del Envío</label>
+                    <input type="text" id="ciudad" required placeholder="Ej: Santiago, Calama, Madrid..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" id="btn-scan" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-indigo-600/20 whitespace-nowrap">
+                        📡 Escanear Ruta
+                    </button>
+                </div>
+            </form>
+
+            <div id="resultado-container" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6 border-t border-slate-700 pt-8">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white mb-1">Condiciones en: <span id="res-ciudad" class="text-indigo-400">--</span></h3>
+                        <p class="text-3xl font-black text-white"><span id="res-temp">0</span>°C</p>
+                    </div>
+                    <span id="badge-riesgo" class="text-[10px] font-extrabold uppercase px-3 py-1 rounded border">Riesgo: --</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Impacto en Filamento PLA</span>
+                            <p id="res-pla" class="text-sm font-semibold">--</p>
+                        </div>
+                        <div class="text-2xl opacity-50">📦</div>
+                    </div>
+
+                    <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Impacto en Resina UV</span>
+                            <p id="res-resina" class="text-sm font-semibold">--</p>
+                        </div>
+                        <div class="text-2xl opacity-50">🧪</div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-4 rounded-xl border bg-slate-900 border-slate-700">
+                    <span class="text-xs font-bold uppercase tracking-wider block mb-2 opacity-70">Recomendación Logística de IA</span>
+                    <p id="res-alerta" class="text-sm font-medium text-slate-300">--</p>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('form-radar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const ciudad = document.getElementById('ciudad').value;
+            const btn = document.getElementById('btn-scan');
+            const resContainer = document.getElementById('resultado-container');
+            
+            // UI Elements
+            const resTemp = document.getElementById('res-temp');
+            const resCiudad = document.getElementById('res-ciudad');
+            const resPla = document.getElementById('res-pla');
+            const resResina = document.getElementById('res-resina');
+            const badgeRiesgo = document.getElementById('badge-riesgo');
+            const resAlerta = document.getElementById('res-alerta');
+
+            btn.disabled = true;
+            btn.innerText = "Consultando Satélites...";
+            resContainer.classList.add('hidden');
+
+            try {
+                // LLAMADA AL BACKEND
+                const response = await fetch(`/api/modulo9?ciudad=${encodeURIComponent(ciudad)}`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error);
+
+                resCiudad.innerText = data.ciudad;
+                resTemp.innerText = data.temperatura;
+                resAlerta.innerText = data.alertas;
+
+                // Color coding PLA
+                if (data.materiales.pla.includes("Peligro")) {
+                    resPla.innerHTML = `<span class="text-rose-400">${data.materiales.pla}</span>`;
+                } else if (data.materiales.pla.includes("Precaución")) {
+                    resPla.innerHTML = `<span class="text-amber-400">${data.materiales.pla}</span>`;
+                } else {
+                    resPla.innerHTML = `<span class="text-emerald-400">${data.materiales.pla}</span>`;
+                }
+
+                // Color coding Resina
+                if (data.materiales.resina.includes("Fractura")) {
+                    resResina.innerHTML = `<span class="text-rose-400">${data.materiales.resina}</span>`;
+                } else {
+                    resResina.innerHTML = `<span class="text-emerald-400">${data.materiales.resina}</span>`;
+                }
+                
+                // Color coding Badge Riesgo Global
+                if (data.riesgo === "Alto") {
+                    badgeRiesgo.className = "text-[10px] font-extrabold uppercase px-3 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                } else if (data.riesgo === "Medio") {
+                    badgeRiesgo.className = "text-[10px] font-extrabold uppercase px-3 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                } else {
+                    badgeRiesgo.className = "text-[10px] font-extrabold uppercase px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                }
+                badgeRiesgo.innerText = `Riesgo Global: ${data.riesgo}`;
+
+                resContainer.classList.remove('hidden');
+
+            } catch (error) {
+                alert(error.message || "Error al conectar con la red meteorológica.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "📡 Escanear Ruta";
+            }
+        });
+    </script>
+</body>
+</html>
