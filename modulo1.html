@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 1 - Viáticos Internacionales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col balance">
+
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+            ← Volver al Dashboard
+        </a>
+        <span class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-400">Módulo 1</span>
+    </nav>
+
+    <main class="flex-grow max-w-3xl w-full mx-auto px-4 py-12">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
+            <h1 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">💸🌤️ Calculador de Viáticos</h1>
+            <p class="text-sm text-slate-400 mb-6">Calcula el presupuesto en USD y analiza el clima del destino de forma segura y paralela.</p>
+
+            <form id="form-viaticos" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Presupuesto Local ($)</label>
+                    <input type="number" id="presupuesto" required min="1" placeholder="Ej: 500000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Ciudad de Destino</label>
+                    <input type="text" id="destino" required placeholder="Ej: Paris, Miami, Madrid" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <button type="submit" id="btn-submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition-colors shadow-lg shadow-indigo-600/20">
+                    Procesar Solicitud Paralela
+                </button>
+            </form>
+
+            <div id="error-container" class="hidden mt-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-sm flex items-start gap-2">
+                <span>⚠️</span>
+                <p id="error-text">Hubo un problema al procesar los datos de viáticos.</p>
+            </div>
+
+            <div id="resultado-container" class="hidden mt-8 border-t border-slate-700/60 pt-6 space-y-6">
+                <h3 class="text-lg font-bold text-white">Resultados Consolidados del Backend</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
+                        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-1">Presupuesto Convertido</span>
+                        <p id="res-dinero" class="text-2xl font-black text-white">$0.00 USD</p>
+                        <p class="text-xs text-slate-500 mt-1">Calculado con tasa de cambio en tiempo real.</p>
+                    </div>
+
+                    <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
+                        <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider block mb-1">Clima y Vestimenta</span>
+                        <p id="res-clima" class="text-base font-semibold text-white">Cargando...</p>
+                        <p id="res-ropa" class="text-xs text-slate-400 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('form-viaticos').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const presupuesto = document.getElementById('presupuesto').value;
+            const destino = document.getElementById('destino').value;
+            const btn = document.getElementById('btn-submit');
+            const errorContainer = document.getElementById('error-container');
+            const resultadoContainer = document.getElementById('resultado-container');
+
+            // Reset de UI
+            errorContainer.classList.add('hidden');
+            resultadoContainer.classList.add('hidden');
+            btn.innerText = "Consultando Backend Seguro...";
+            btn.disabled = true;
+
+            try {
+                // LLAMADA A NUESTRO BACKEND SERVERLESS DE VERCEL
+                const response = await fetch(`/api/modulo1?presupuesto=${presupuesto}&destino=${encodeURIComponent(destino)}`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || "Error en el servidor");
+
+                // Mostrar resultados exitosos
+                document.getElementById('res-dinero').innerText = `$${data.conversionUsd} USD`;
+                document.getElementById('res-clima').innerText = `Temperatura: ${data.temperatura}°C`;
+                document.getElementById('res-ropa').innerText = `💡 Recomendación: ${data.recomendacionRopa}`;
+                
+                resultadoContainer.classList.remove('hidden');
+            } catch (error) {
+                // Manejo de contingencia visual requerido por la guía
+                document.getElementById('error-text').innerText = error.message;
+                errorContainer.classList.remove('hidden');
+            } finally {
+                btn.innerText = "Procesar Solicitud Paralela";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
