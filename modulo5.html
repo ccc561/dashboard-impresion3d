@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 5 - Monitor Webhook Make</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+            ← Volver al Dashboard
+        </a>
+        <span class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-400">Módulo 5</span>
+    </nav>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-12 space-y-6">
+        
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-white mb-1 flex items-center gap-2">🤖 Monitor Webhook Make</h1>
+                    <p class="text-sm text-slate-400">Consola de diagnóstico para el bot automatizado de notificaciones por correo.</p>
+                </div>
+                <button id="btn-ping" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-colors shadow-lg shadow-indigo-600/15 flex items-center gap-2 whitespace-nowrap">
+                    ⚡ Lanzar Diagnóstico (Ping)
+                </button>
+            </div>
+
+            <div id="panel-estado" class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Estado de la Integración</span>
+                    <div class="flex items-center gap-2">
+                        <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-slate-500 animate-pulse"></span>
+                        <p id="status-texto" class="text-base font-semibold text-slate-300">Inactivo - Esperando Diagnóstico</p>
+                    </div>
+                </div>
+                <div class="sm:text-right">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Última Respuesta</span>
+                    <p id="status-tiempo" class="text-sm font-mono text-slate-400">--:--:--</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-2xl">
+            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">📋 Historial de Handshakes & Tráfico</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900/40 text-slate-400 uppercase tracking-wider border-b border-slate-700/50">
+                        <tr>
+                            <th class="px-4 py-3">Timestamp</th>
+                            <th class="px-4 py-3">Endpoint Evaluado</th>
+                            <th class="px-4 py-3">Latencia</th>
+                            <th class="px-4 py-3">Código HTTP</th>
+                            <th class="px-4 py-3 text-right">Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-logs" class="divide-y divide-slate-700/30 font-mono text-slate-400">
+                        <tr>
+                            <td colspan="5" class="px-4 py-6 text-center text-slate-500 italic">No se registran escaneos en esta sesión.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const btnPing = document.getElementById('btn-ping');
+        const statusDot = document.getElementById('status-dot');
+        const statusTexto = document.getElementById('status-texto');
+        const statusTiempo = document.getElementById('status-tiempo');
+        const tablaLogs = document.getElementById('tabla-logs');
+
+        let primerLog = true;
+
+        btnPing.addEventListener('click', async () => {
+            btnPing.disabled = true;
+            btnPing.innerText = "Ejecutando Handshake...";
+            
+            statusTexto.innerText = "Conectando con el webhook corporativo...";
+            statusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-spin";
+
+            try {
+                // Hacemos la consulta a nuestra API interna del backend
+                const response = await fetch('/api/modulo5');
+                const data = await response.json();
+
+                const ahora = new Date().toLocaleTimeString();
+                statusTiempo.innerText = ahora;
+
+                // Actualizar panel superior según la respuesta del backend
+                if (data.online) {
+                    statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+                    statusTexto.className = "text-base font-semibold text-emerald-400";
+                    statusTexto.innerText = `Online - ${data.mensaje}`;
+                } else {
+                    statusDot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+                    statusTexto.className = "text-base font-semibold text-rose-400";
+                    statusTexto.innerText = `Falla - ${data.mensaje}`;
+                }
+
+                // Limpiar mensaje vacío del historial en la primera ejecución
+                if (primerLog) {
+                    tablaLogs.innerHTML = "";
+                    primerLog = false;
+                }
+
+                // Inyectar fila en la tabla de logs clínicos del bot
+                const badgeColor = data.statusHttp === 200 ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-rose-400 bg-rose-500/10 border-rose-500/20";
+                const filaHtml = `
+                    <tr class="hover:bg-slate-750/30 transition-colors">
+                        <td class="px-4 py-3 text-slate-400">${ahora}</td>
+                        <td class="px-4 py-3 text-slate-500 text-[11px] truncate max-w-[180px]">${data.endpoint}</td>
+                        <td class="px-4 py-3 text-indigo-400 font-bold">${data.latencia}</td>
+                        <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded border text-[10px] font-bold ${badgeColor}">${data.statusHttp}</span></td>
+                        <td class="px-4 py-3 text-right font-sans text-xs ${data.online ? 'text-emerald-400' : 'text-rose-400'}">${data.resultado}</td>
+                    </tr>
+                `;
+                tablaLogs.innerHTML = filaHtml + tablaLogs.innerHTML;
+
+            } catch (error) {
+                alert("Error crítico en el túnel de diagnóstico.");
+            } finally {
+                btnPing.disabled = false;
+                btnPing.innerText = "⚡ Lanzar Diagnóstico (Ping)";
+            }
+        });
+    </script>
+</body>
+</html>
