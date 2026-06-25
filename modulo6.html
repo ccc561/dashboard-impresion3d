@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 6 - Cotizador Inteligente 3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+            ← Volver al Dashboard
+        </a>
+        <span class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-400 font-mono">CALC_ENGINE_V1.0</span>
+    </nav>
+
+    <main class="flex-grow max-w-3xl w-full mx-auto px-4 py-12">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
+            <h1 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">⚖️ Cotizador de Manufactura</h1>
+            <p class="text-sm text-slate-400 mb-8">Algoritmo de cálculo de precisión para piezas 3D basado en material, peso y horas de uso.</p>
+
+            <form id="form-cotizador" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Peso Estimado (Gramos)</label>
+                        <input type="number" id="peso" required min="1" step="0.1" placeholder="Ej: 150" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Tiempo de Impresión (Horas)</label>
+                        <input type="number" id="horas" required min="0.5" step="0.5" placeholder="Ej: 8" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Tipo de Filamento / Resina</label>
+                        <select id="material" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                            <option value="pla">PLA Pro (Estándar)</option>
+                            <option value="abs">ABS (Técnico)</option>
+                            <option value="petg">PETG (Resistente)</option>
+                            <option value="resina">Resina UV (Detalle)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" id="btn-calc" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20">
+                            Calcular Cotización
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="resultado-container" class="hidden mt-10 space-y-6 animate-in fade-in duration-500">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-2xl">
+                    <div class="bg-slate-900 rounded-[14px] p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-white font-bold uppercase tracking-widest text-xs">Presupuesto Final Generado</h3>
+                            <span class="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/30 font-bold">VÁLIDO POR 48H</span>
+                        </div>
+                        <div class="flex flex-col md:flex-row justify-between gap-6">
+                            <div>
+                                <p id="res-clp" class="text-3xl font-black text-white">$0 CLP</p>
+                                <p id="res-usd" class="text-sm font-medium text-slate-400 mt-1">Equivalente a: $0.00 USD</p>
+                            </div>
+                            <div class="text-left md:text-right border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0 md:pl-6 space-y-1">
+                                <p class="text-[10px] text-slate-500 font-bold uppercase">Desglose Técnico</p>
+                                <p id="det-material" class="text-xs text-slate-300">Material: --</p>
+                                <p id="det-energia" class="text-xs text-slate-300">Energía/Uso: --</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const form = document.getElementById('form-cotizador');
+        const resContainer = document.getElementById('resultado-container');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btn-calc');
+            btn.disabled = true;
+            btn.innerText = "Calculando Algoritmo...";
+
+            const params = new URLSearchParams({
+                peso: document.getElementById('peso').value,
+                horas: document.getElementById('horas').value,
+                material: document.getElementById('material').value
+            });
+
+            try {
+                const response = await fetch(`/api/modulo6?${params}`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error();
+
+                // Pintar resultados con formato de moneda
+                document.getElementById('res-clp').innerText = `$${parseInt(data.totalCLP).toLocaleString('es-CL')} CLP`;
+                document.getElementById('res-usd').innerText = `Equivalente a: $${data.totalUSD} USD`;
+                
+                document.getElementById('det-material').innerText = `Costo Material: $${parseInt(data.costoMaterial).toLocaleString('es-CL')} CLP`;
+                document.getElementById('det-energia').innerText = `Energía/Máquina: $${parseInt(data.costoEnergia).toLocaleString('es-CL')} CLP`;
+
+                resContainer.classList.remove('hidden');
+            } catch (err) {
+                alert("Error en el cálculo. Revisa los datos ingresados.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Calcular Cotización";
+            }
+        });
+    </script>
+</body>
+</html>
