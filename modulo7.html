@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 7 - Catálogo de Modelos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-2">
+            ← Volver al Dashboard
+        </a>
+        <span class="text-xs bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-400">Módulo 7</span>
+    </nav>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-12">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">📚 Catálogo de Modelos 3D</h1>
+            <p class="text-sm text-slate-400">Llamada a API externa en tiempo real para listar los modelos prediseñados disponibles para impresión.</p>
+        </div>
+
+        <div id="galeria-modelos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-12" id="loader">
+                <div class="inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="text-slate-400 text-sm animate-pulse">Consultando API externa de catálogo...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const galeria = document.getElementById('galeria-modelos');
+            const loader = document.getElementById('loader');
+
+            try {
+                // Llamamos a nuestro backend, que a su vez llama a la API externa
+                const response = await fetch('/api/modulo7');
+                const modelos = await response.json();
+
+                if (!response.ok) throw new Error("Falla al cargar el catálogo");
+
+                // Quitamos el loader
+                loader.remove();
+
+                // Pintamos las tarjetas
+                modelos.forEach(modelo => {
+                    galeria.innerHTML += `
+                        <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl hover:border-indigo-500/50 transition-colors group flex flex-col">
+                            <div class="h-48 overflow-hidden relative bg-slate-900">
+                                <img src="${modelo.imagen}" alt="${modelo.nombre}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500">
+                                <div class="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-sm border border-slate-700 px-2 py-1 rounded text-[10px] font-bold text-indigo-300 uppercase tracking-wider">
+                                    ${modelo.categoria}
+                                </div>
+                            </div>
+                            <div class="p-5 flex-grow flex flex-col justify-between">
+                                <div>
+                                    <h3 class="text-lg font-bold text-white mb-1">${modelo.nombre}</h3>
+                                    <p class="text-xs text-slate-400 mb-4 line-clamp-2">${modelo.descripcion}</p>
+                                </div>
+                                <div class="space-y-2 pt-4 border-t border-slate-700/50">
+                                    <div class="flex justify-between items-center text-[11px]">
+                                        <span class="text-slate-500 font-bold uppercase">Material Óptimo</span>
+                                        <span class="text-slate-300 font-mono">${modelo.material}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-[11px]">
+                                        <span class="text-slate-500 font-bold uppercase">Tiempo Est.</span>
+                                        <span class="text-slate-300 font-mono">${modelo.tiempo}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                loader.innerHTML = `
+                    <p class="text-rose-400 text-sm font-bold">⚠️ Error de conexión con la API externa.</p>
+                    <p class="text-slate-500 text-xs mt-2">Por favor, recarga la página.</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
